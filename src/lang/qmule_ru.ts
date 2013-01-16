@@ -3131,6 +3131,10 @@ Do you want to associate qMule to torrent files, Magnet links and eMule collecti
         <translation>Использовать qMule для .torrent файлов</translation>
     </message>
     <message>
+        <source>Use qMule for ed2k links</source>
+        <translation>Использовать qMule для ed2k ссылок</translation>
+    </message>
+    <message>
         <source>Use qMule for magnet links</source>
         <translation>Использовать qMule для magnet ссылок</translation>
     </message>
@@ -6991,6 +6995,10 @@ However, those plugins were disabled.</source>
     <message>
         <source>Download</source>
         <translation>Приём</translation>
+    </message>
+    <message>
+        <source>Download(Pause)</source>
+        <translation>Приём(Пауза)</translation>
     </message>
     <message>
         <source>Size</source>
