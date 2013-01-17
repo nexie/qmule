@@ -12,3 +12,4 @@ qrc_*.cpp
 ui_*.h
 *.moc
 out.txt
+*.user
