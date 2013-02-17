@@ -40,7 +40,6 @@
 #include <QSettings>
 #include <QNetworkInterface>
 #include <QTextCodec>
-
 #ifdef DISABLE_GUI
 #include <QCoreApplication>
 #else
@@ -75,7 +74,11 @@ const int UNLEN = 256;
 #endif
 
 #include "libtorrent/bencode.hpp"
+
+#ifdef Q_WS_WIN
+// migration
 #include "transport/session.h"
+#endif
 #include "torrentpersistentdata.h"
 
 #ifndef DISABLE_GUI
@@ -629,14 +632,14 @@ QString misc::XCatalogCacheLocation()
     return location;
 }
 
-QString misc::ED2KKeyFile()
+QString misc::ED2KMetaLocation(const QString& filename)
 {
     const QString location = QDir::cleanPath(QDesktopServicesDataLocation()
-                                               + QDir::separator() + "ED2K_key");
+                                               + QDir::separator() + "ED2K_meta");
 
     QDir locationDir(location);
     if (!locationDir.exists()) locationDir.mkpath(locationDir.absolutePath());
-    return (locationDir.filePath(QString("key.rnd")));
+    return (locationDir.filePath(filename));
 }
 
 QString misc::ED2KCollectionLocation()
@@ -1400,38 +1403,4 @@ shared_map misc::migrationShareds()
      }
 
      return res;
- }
-
- Delay::Delay(int mseconds) : m_mseconds(mseconds)
- {
-     connect(&m_timer, SIGNAL(timeout()), this, SLOT(on_timeout()));
- }
-
- Delay::~Delay()
- {
-
- }
-
- void Delay::execute(boost::function<void()> f)
- {
-     m_delegate = f;
-
-     if (m_timer.isActive())
-     {
-         m_timer.setInterval(m_mseconds);
-     }
-     else
-     {
-         m_timer.start(m_mseconds);
-     }
- }
-
- void Delay::cancel()
- {
-     if (m_timer.isActive()) m_timer.stop();
- }
-
- void Delay::on_timeout()
- {
-     m_delegate();
  }

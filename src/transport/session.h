@@ -4,12 +4,13 @@
 
 #include <QScopedPointer>
 
+#include "delay.h"
 #include "transport/transfer.h"
 #include "qtlibtorrent/qbtsession.h"
 #include "qtlibed2k/qed2ksession.h"
 #include "torrentspeedmonitor.h"
 #include "session_filesystem.h"
-#include "misc.h"
+
 
 /**
  * Generic data transfer session

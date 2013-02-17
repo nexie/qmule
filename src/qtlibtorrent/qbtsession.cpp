@@ -83,7 +83,6 @@
 #include <libed2k/util.hpp>
 #include <queue>
 #include <string.h>
-#include "dnsupdater.h"
 
 using namespace libtorrent;
 
@@ -112,7 +111,7 @@ QBtSession::QBtSession()
   , geoipDBLoaded(false), resolve_countries(false)
   #endif
   , m_tracker(0), m_shutdownAct(NO_SHUTDOWN),
-    m_upnp(0), m_natpmp(0), m_dynDNSUpdater(0)
+    m_upnp(0), m_natpmp(0)
 {}
 
 void QBtSession::start()
@@ -135,7 +134,6 @@ void QBtSession::start()
   const QString peer_id = "qB";
   // Construct session
   s = new session(fingerprint(peer_id.toLocal8Bit().constData(), version.at(0), version.at(1), version.at(2), version.at(3)), 0);
-  std::cout << "Peer ID: " << fingerprint(peer_id.toLocal8Bit().constData(), version.at(0), version.at(1), version.at(2), version.at(3)).to_string() << std::endl;
   addConsoleMessage("Peer ID: "+misc::toQString(fingerprint(peer_id.toLocal8Bit().constData(), version.at(0), version.at(1), version.at(2), version.at(3)).to_string()));
 
   // Set severity level of libtorrent session
@@ -392,7 +390,6 @@ void QBtSession::configureSession() {
   // * Session settings
   session_settings sessionSettings = s->settings();
   sessionSettings.user_agent = "qMule "VERSION;
-  std::cout << "HTTP user agent is " << sessionSettings.user_agent << std::endl;
   addConsoleMessage(tr("HTTP user agent is %1").arg(misc::toQString(sessionSettings.user_agent)));
 
   sessionSettings.upnp_ignore_nonrouters = true;
@@ -860,6 +857,24 @@ void QBtSession::loadTorrentSettings(QTorrentHandle& h) {
 #endif
 }
 
+QString fixMagnetPersistentData(const QString& magnetHash)
+{
+    QDir torrentBackup(misc::BTBackupLocation());
+    QString torrentPath = torrentBackup.absoluteFilePath(magnetHash+".torrent");
+    torrent_info info(torrentPath.toUtf8().constData());
+    QString torrentHash = misc::toQString(info.info_hash());
+
+    if (magnetHash != torrentHash)
+    {
+        torrentBackup.rename(magnetHash+".torrent", torrentHash+".torrent");
+        torrentBackup.remove(magnetHash+".fastresume");
+        TorrentPersistentData::saveHash(magnetHash, torrentHash);
+        TorrentPersistentData::saveMagnet(torrentHash, false);
+    }
+
+    return torrentHash;
+}
+
 QPair<Transfer,ErrorCode> QBtSession::addLink(QString strLink, bool resumed /* = false */)
 {
   QTorrentHandle h;
@@ -873,9 +888,12 @@ QPair<Transfer,ErrorCode> QBtSession::addLink(QString strLink, bool resumed /* =
   const QDir torrentBackup(misc::BTBackupLocation());
   if (resumed) {
     // Load metadata
-    const QString torrent_path = torrentBackup.absoluteFilePath(hash+".torrent");
+    QString torrent_path = torrentBackup.absoluteFilePath(hash+".torrent");
     if (QFile::exists(torrent_path))
+    {
+      torrent_path = torrentBackup.absoluteFilePath(fixMagnetPersistentData(hash)+".torrent");
       return qMakePair(Transfer(addTorrent(torrent_path, false, QString::null, true)), ec);
+    }
   }
 
   qDebug("Adding a magnet URI: %s", qPrintable(hash));
